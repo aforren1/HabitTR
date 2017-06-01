@@ -1,0 +1,5 @@
+*.txt
+*.eps
+*.pdf
+*.svg
+*.mat
