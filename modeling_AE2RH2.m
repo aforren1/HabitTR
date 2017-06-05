@@ -116,7 +116,7 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
     end
 
 end
-%%
+
 %% model comparison
 % set likelihood to NaN's for missing data
 for c=1:3
@@ -169,7 +169,7 @@ xlabel('condition')
 
 %% plot data and fits
 close all;
-makepdf=0;
+
 cond_str = {'minimal','4day','4week'};
 
 cols(:,:,1) = [ 0 210 255; 255 210 0; 0 0 0; 210 0 255]/256;
@@ -214,7 +214,7 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
 end
 
 %% generate pdfs
-1
+makepdf=1;
 if(makepdf)
     for subject=1:24
         figure(subject)
