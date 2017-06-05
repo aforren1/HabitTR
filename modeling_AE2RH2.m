@@ -168,8 +168,6 @@ ylabel('Average \Delta AIC')
 xlabel('condition')
 
 %% plot data and fits
-close all;
-
 cols(:,:,1) = [ 0 210 255; 255 210 0; 0 0 0; 210 0 255]/256;
 cols(:,:,2) = [ 0 155 255; 255 100 0; 0 0 0; 155 0 255]/256;
 cols(:,:,3) = [0 100 255; 255 0 0; 0 0 0; 100 0 255]/256;
