@@ -4,15 +4,15 @@ load tmp;
 clear data
 % fit model on a subject by subject basis...
 p = [];
-p.condition1.unchanged = []; p.condition1.revised = []; 
-p.condition2.unchanged = []; p.condition2.revised = []; 
+p.condition1.unchanged = []; p.condition1.revised = [];
+p.condition2.unchanged = []; p.condition2.revised = [];
 p.condition3.unchanged = []; p.condition3.revised = [];
 
 for c = 1:3 % 1=minimal, 2=4day, 3=4week
     if c < 2
-       maxSub = 24; exclude = d.e1.exclude; 
+        maxSub = 24; exclude = d.e1.exclude;
     elseif c == 3
-       maxSub = 15; exclude = d.e2.exclude;
+        maxSub = 15; exclude = d.e2.exclude;
     end
     
     for subject = 1:maxSub
@@ -21,27 +21,27 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             if c==1
                 unchanged = d.e1.(subStr).untrained.tr.sw.unchanged;	revised = d.e1.(subStr).untrained.tr.sw.revised; habit = d.e1.(subStr).untrained.tr.sw.habit;
                 unchangedX= d.e1.(subStr).untrained.tr.bin.unchanged.x; unchangedY= d.e1.(subStr).untrained.tr.bin.unchanged.y;
-                revisedX =  d.e1.(subStr).untrained.tr.bin.revised.x;   revisedY =  d.e1.(subStr).untrained.tr.bin.revised.y;   
-                recodedX =  d.e1.(subStr).untrained.tr.modelCoded.x;    recodedY =  d.e1.(subStr).untrained.tr.modelCoded.y; 
+                revisedX =  d.e1.(subStr).untrained.tr.bin.revised.x;   revisedY =  d.e1.(subStr).untrained.tr.bin.revised.y;
+                recodedX =  d.e1.(subStr).untrained.tr.modelCoded.x;    recodedY =  d.e1.(subStr).untrained.tr.modelCoded.y;
             elseif c==2
                 unchanged = d.e1.(subStr).trained.tr.sw.unchanged; revised = d.e1.(subStr).trained.tr.sw.revised; habit = d.e1.(subStr).trained.tr.sw.habit;
                 unchangedX= d.e1.(subStr).trained.tr.bin.unchanged.x; unchangedY= d.e1.(subStr).trained.tr.bin.unchanged.y;
-                revisedX =  d.e1.(subStr).trained.tr.bin.revised.x;   revisedY =  d.e1.(subStr).trained.tr.bin.revised.y;  
-                recodedX =  d.e1.(subStr).trained.tr.modelCoded.x;    recodedY =  d.e1.(subStr).trained.tr.modelCoded.y; 
+                revisedX =  d.e1.(subStr).trained.tr.bin.revised.x;   revisedY =  d.e1.(subStr).trained.tr.bin.revised.y;
+                recodedX =  d.e1.(subStr).trained.tr.modelCoded.x;    recodedY =  d.e1.(subStr).trained.tr.modelCoded.y;
             elseif c==3
                 unchanged = d.e2.(subStr).tr.sw6.unchanged;     revised = d.e2.(subStr).tr.sw6.revised;         habit = d.e2.(subStr).tr.sw6.habit;
                 unchangedX= d.e2.(subStr).tr.bin.unchanged.x;   unchangedY= d.e2.(subStr).tr.bin.unchanged.y;
-                revisedX =  d.e2.(subStr).tr.bin.revised.x;     revisedY =  d.e2.(subStr).tr.bin.revised.y; 
-                recodedX =  d.e2.(subStr).tr.modelCoded.x;      recodedY =  d.e2.(subStr).tr.modelCoded.y; 
+                revisedX =  d.e2.(subStr).tr.bin.revised.x;     revisedY =  d.e2.(subStr).tr.bin.revised.y;
+                recodedX =  d.e2.(subStr).tr.modelCoded.x;      recodedY =  d.e2.(subStr).tr.modelCoded.y;
             end
             
             paramsU = fit_speed_accuracy_AE2(unchangedX,unchangedY);
             p1 = paramsU(4)+(paramsU(3)-paramsU(4))*normcdf([(1:1200)/1000],paramsU(1),paramsU(2));
-            p.(['condition' num2str(c)]).unchanged = [p.(['condition' num2str(c)]).unchanged; paramsU]; 
+            p.(['condition' num2str(c)]).unchanged = [p.(['condition' num2str(c)]).unchanged; paramsU];
             
             params = fit_speed_accuracy_AE2(revisedX,revisedY);
             p2 = params(4)+(params(3)-params(4))*normcdf([(1:1200)/1000],params(1),params(2));
-            p.(['condition' num2str(c)]).revised = [p.(['condition' num2str(c)]).revised; params]; 
+            p.(['condition' num2str(c)]).revised = [p.(['condition' num2str(c)]).revised; params];
             
             %%ADRIAN: here's the place to try out the new fitting.
             %you can use inputs recodedX and recodedY
@@ -62,7 +62,7 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             recodedY = recodedY(revised_trials)';
             
             %---Adrian fits from here down----
-           
+            
             % lower/upper bounds for fitting (with BADS)
             % params: [mu_A sigma_A AE_A mu_B sigma_B AE_B init_AE rho]; -
             %       NB - rho = probability of habit in flex-habit model
@@ -109,23 +109,27 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             for i=1:3
                 model(i).presponse(:,:,c,subject) = getResponseProbs(xplot,model(i).paramsOpt(subject,:,c),model(i).name);
             end
-
+            
         end
     end
 end
 
 %% plot data and fits
-
+close all;
 cond_str = {'minimal','4day','4week'};
-    
+
+cols(:,:,1) = [ 0 175 255; 255 175 0; 0 0 0; 210 0 255]/256;
+cols(:,:,2) = [ 0 100 255; 255 100 0; 0 0 0; 140 0 255]/256;
+cols(:,:,3) = [0 0 255; 255 0 0; 0 0 0; 75 0 255]/256;
+
 for c = 1:3 % 1=minimal, 2=4day, 3=4week
     if c < 2
-       maxSub = 24; exclude = d.e1.exclude; 
+        maxSub = 24; exclude = d.e1.exclude;
     elseif c == 3
-       maxSub = 15; exclude = d.e2.exclude;
+        maxSub = 15; exclude = d.e2.exclude;
     end
     
-
+    
     
     for subject = 1:maxSub
         if ismember(subject,exclude) == 0,  %only run on subjects that completed the study
@@ -133,22 +137,27 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             figure(subject);
             for m=1:3
                 subplot(3,3,c+3*(m-1));  hold on;  axis([0 1200 0 1.05]);
-                title([cond_str{c},' condition; ',model(c).name,' model']);
-                plot([1:1200],data(subject,c).sliding_window(4,:),'c','linewidth',1);
-                plot([1:1200],data(subject,c).sliding_window(1,:),'b','linewidth',1);
-                plot([1:1200],data(subject,c).sliding_window(2,:),'r','linewidth',1);
-               
+                title([cond_str{c},' condition; ',model(m).name,' model']);
+                plot([1:1200],data(subject,c).sliding_window(4,:),'color',cols(4,:,c),'linewidth',1);
+                plot([1:1200],data(subject,c).sliding_window(1,:),'color',cols(1,:,c),'linewidth',1);
+                plot([1:1200],data(subject,c).sliding_window(2,:),'color',cols(2,:,c),'linewidth',1);
+                
                 %plotting model fit data...
-                plot([1:1200],data(subject,c).pfit_unchanged,'c','linewidth',2);
-
-                plot([1:1200],model(m).presponse(1,:,c,subject),'b','linewidth',2)
-                plot([1:1200],model(m).presponse(2,:,c,subject),'r','linewidth',2)
-                plot([1:1200],model(1).presponse(4,:,c,subject),'r:','linewidth',2)
+                plot([1:1200],data(subject,c).pfit_unchanged,'color',cols(4,:,c),'linewidth',2);
+                
+                plot([1:1200],model(m).presponse(1,:,c,subject),'color',cols(1,:,c),'linewidth',2)
+                plot([1:1200],model(m).presponse(2,:,c,subject),'color',cols(2,:,c),'linewidth',2)
+                if(m~=2)
+                    plot([1:1200],model(m).presponse(4,:,c,subject),':','color',cols(4,:,c),'linewidth',2)
+                end
             end
-
+            
         end
     end
 end
+
+%% output to pdf
+
 
 %% model comparison
 
@@ -179,7 +188,7 @@ for c=1:3
     subplot(1,3,c); hold on
     title(cond_str{c})
     plot(AIC(c,:,2)-AIC(c,:,1),'o')
-
+    
     plot([0 25],[0 0],'k')
     axis([0 25 -20 60])
     ylabel('\Delta BIC')
