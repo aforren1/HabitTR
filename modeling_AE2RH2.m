@@ -1,5 +1,7 @@
 close all; clear all;
 
+makepdf = 1; % make a pdf of data if 1
+
 load tmp;
 clear data
 % fit model on a subject by subject basis...
@@ -92,35 +94,88 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             data(subject,c).pfit_unchanged = p1;
             
             % set up and fit each model
-            for i=1:3
+            for m=1:3
                 %model(i).InitParams
-                model(i).like_fun = @(params) habit_lik(data(subject,c).RT,data(subject,c).response,params,model(i).name);
+                model(m).like_fun = @(params) habit_lik(data(subject,c).RT,data(subject,c).response,params,model(m).name);
                 
                 %[paramsOpt LLopt_2process(c,subject)] = fminsearch(habit_lik_constr,paramsInit);
                 %[model(i).paramsOpt(subject,:,c), model(i).LLopt(c,subject)] = bads(model(i).like_fun,paramsInit,LB,UB,PLB,PUB);
-                [model(i).paramsOpt(subject,:,c), model(i).LLopt(c,subject)] = fmincon(model(i).like_fun,paramsInit,[],[],[],[],LB,UB);
+                [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = fmincon(model(m).like_fun,paramsInit,[],[],[],[],LB,UB);
                 
                 % get full likelihood vector
-                [~, model(i).Lv{subject,c}] = model(i).like_fun(model(i).paramsOpt(subject,:,c));
+                [~, model(m).Lv{subject,c}] = model(m).like_fun(model(m).paramsOpt(subject,:,c));
             end
             
             % generate continuous model predictions
             xplot=[.001:.001:1.2];
-            for i=1:3
-                model(i).presponse(:,:,c,subject) = getResponseProbs(xplot,model(i).paramsOpt(subject,:,c),model(i).name);
+            for m=1:3
+                model(m).presponse(:,:,c,subject) = getResponseProbs(xplot,model(m).paramsOpt(subject,:,c),model(m).name);
             end
             
         end
     end
+
 end
+%%
+%% model comparison
+% set likelihood to NaN's for missing data
+for c=1:3
+    for subject=1:24
+        if(~isempty(model(1).Lv{subject,c}))
+            AIC(c,subject,1) = 2*7 + 2*model(1).LLopt(c,subject);
+            AIC(c,subject,2) = 2*4 + 2*model(2).LLopt(c,subject);
+            AIC(c,subject,3) = 2*8 + 2*model(2).LLopt(c,subject);
+        else
+            AIC(c,subject,1) = NaN;
+            AIC(c,subject,2) = NaN;
+            AIC(c,subject,3) = NaN;
+            for m=1:3
+                model(m).LLopt(c,subject)=NaN;
+            end
+        end
+    end
+end
+
+% compare likelihoods
+figure(100); clf; hold on
+for c=1:3
+    subplot(1,3,c); hold on
+    plot(model(2).LLopt(c,:)-model(1).LLopt(c,:),'o')
+    axis([0 25 -10 40])
+end
+
+% compare AIC
+figure(101); clf;
+for c=1:3
+    subplot(1,3,c); hold on
+    title(cond_str{c})
+    plot(AIC(c,:,2)-AIC(c,:,1),'o')
+    
+    plot([0 25],[0 0],'k')
+    axis([0 25 -20 60])
+    ylabel('\Delta AIC')
+    xlabel('Subject #')
+    
+end
+dAIC12 = AIC(:,:,2)-AIC(:,:,1);
+
+figure(102); clf; hold on
+plot(nanmean(dAIC12'),'o')
+plot([1 1; 2 2; 3 3]',[nanmean(dAIC12')+seNaN(dAIC12');nanmean(dAIC12')-seNaN(dAIC12')],'b-')
+plot([0 4],[0 0],'k')
+xlim([.5 3.5])
+ylabel('Average \Delta AIC')
+xlabel('condition')
 
 %% plot data and fits
 close all;
+makepdf=0;
 cond_str = {'minimal','4day','4week'};
 
-cols(:,:,1) = [ 0 175 255; 255 175 0; 0 0 0; 210 0 255]/256;
-cols(:,:,2) = [ 0 100 255; 255 100 0; 0 0 0; 140 0 255]/256;
-cols(:,:,3) = [0 0 255; 255 0 0; 0 0 0; 75 0 255]/256;
+cols(:,:,1) = [ 0 210 255; 255 210 0; 0 0 0; 210 0 255]/256;
+cols(:,:,2) = [ 0 155 255; 255 100 0; 0 0 0; 155 0 255]/256;
+cols(:,:,3) = [0 100 255; 255 0 0; 0 0 0; 100 0 255]/256;
+
 
 for c = 1:3 % 1=minimal, 2=4day, 3=4week
     if c < 2
@@ -128,16 +183,13 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
     elseif c == 3
         maxSub = 15; exclude = d.e2.exclude;
     end
-    
-    
-    
     for subject = 1:maxSub
         if ismember(subject,exclude) == 0,  %only run on subjects that completed the study
             % plotting raw data...
-            figure(subject);
+            fhandle = figure(subject);
             for m=1:3
                 subplot(3,3,c+3*(m-1));  hold on;  axis([0 1200 0 1.05]);
-                title([cond_str{c},' condition; ',model(m).name,' model']);
+                title([cond_str{c},' condition; ',model(m).name,' model'],'fontsize',8);
                 plot([1:1200],data(subject,c).sliding_window(4,:),'color',cols(4,:,c),'linewidth',1);
                 plot([1:1200],data(subject,c).sliding_window(1,:),'color',cols(1,:,c),'linewidth',1);
                 plot([1:1200],data(subject,c).sliding_window(2,:),'color',cols(2,:,c),'linewidth',1);
@@ -150,57 +202,30 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
                 if(m~=2)
                     plot([1:1200],model(m).presponse(4,:,c,subject),':','color',cols(4,:,c),'linewidth',2)
                 end
+                
+                text(650,.5,['AIC = ',num2str(AIC(c,subject,m))],'fontsize',8);
             end
-            
         end
+        set(fhandle, 'Position', [100, 100, 800, 600]);
+        set(fhandle, 'Color','w')
     end
+    
+
 end
 
-%% output to pdf
-
-
-%% model comparison
-
-% compare likelihoods
-figure(100); clf; hold on
-for c=1:3
-    subplot(1,3,c); hold on
-    plot(model(2).LLopt(c,:)-model(1).LLopt(c,:),'o')
-end
-
-
-for c=1:3
+%% generate pdfs
+1
+if(makepdf)
     for subject=1:24
-        if(~isempty(model(1).Lv{subject,c}))
-            AIC(c,subject,1) = 2*7 + 2*model(1).LLopt(c,subject);
-            AIC(c,subject,2) = 2*4 + 2*model(2).LLopt(c,subject);
-            AIC(c,subject,3) = 2*8 + 2*model(2).LLopt(c,subject);
-        else
-            AIC(c,subject,1) = NaN;
-            AIC(c,subject,2) = NaN;
-            AIC(c,subject,3) = NaN;
-        end
+        figure(subject)
+        % save pdf for this participant
+        eval(['export_fig data_pdfs/Habit_Subj',num2str(subject),' -pdf']);
     end
-end
-
-figure(101); clf;
-for c=1:3
-    subplot(1,3,c); hold on
-    title(cond_str{c})
-    plot(AIC(c,:,2)-AIC(c,:,1),'o')
     
-    plot([0 25],[0 0],'k')
-    axis([0 25 -20 60])
-    ylabel('\Delta BIC')
-    xlabel('Subject #')
-    
+    % collate all subjs into 1 pdf
+    evalstr = ['append_pdfs data_pdfs/AllSubjs.pdf'];
+    for i=1:24
+        evalstr = [evalstr,' data_pdfs/Habit_Subj',num2str(i),'.pdf'];
+    end
+    eval(evalstr);
 end
-dAIC12 = AIC(:,:,2)-AIC(:,:,1);
-
-figure(102); clf; hold on
-plot(nanmean(dAIC12'),'o')
-plot([1 1; 2 2; 3 3]',[nanmean(dAIC12')+seNaN(dAIC12');nanmean(dAIC12')-seNaN(dAIC12')],'b-')
-plot([0 4],[0 0],'k')
-xlim([.5 3.5])
-ylabel('Average \Delta BIC')
-xlabel('condition')
