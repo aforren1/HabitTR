@@ -1,4 +1,4 @@
-function[LL Lv] = habit_lik(RT,response,paramsA,paramsB,initAE)
+function[LL Lv] = habit_lik_rho(RT,response,paramsA,paramsB,initAE,rho)
 % computes likelihood of observed responses under automaticity model
 % inputs:
 %   RT - N x 1 reaction time for each trial
@@ -9,7 +9,7 @@ function[LL Lv] = habit_lik(RT,response,paramsA,paramsB,initAE)
 %   params - parameters of the model
 %            [sigmaA muA qA sigmaB muB qB]; (q = probability of error in
 %                                            each process)
-tic
+
 PhiA = normcdf(RT,paramsA(1),paramsA(2)); % probability that A has been planned by RT
 PhiB = normcdf(RT,paramsB(1),paramsB(2));
 
@@ -22,13 +22,13 @@ initAE = sigg(initAE); % initial (low RT) asymptotic error
 %[paramsA;paramsB];
 
 % coefficients for probability of acting according to mapping B (correct)
-alpha(1,:) = [initAE (1-qA)/3 qB];
+alpha(1,:) = [initAE rho*(1-qA)/3+(1-rho)*initAE qB];
 
 % coefficients for probability of acting according to mapping A (habit)
-alpha(2,:) = [initAE qA (1-qB)/3];
+alpha(2,:) = [initAE rho*qA+(1-rho)*initAE (1-qB)/3];
 
 % coefficients for other keys
-alpha(3,:) = [.5-initAE (1-qA)/3 (1-qB)/3];
+alpha(3,:) = [.5-initAE rho*(1-qA)/3+(1-rho)*(.5-initAE) (1-qB)/3];
 
 Lv = alpha(response,1).*(1-PhiA).*(1-PhiB) + alpha(response,2).*PhiA.*(1-PhiB) + alpha(response,3).*PhiB;
 
@@ -36,7 +36,7 @@ LLv = log(Lv); % log-likelihood vector
 aa =1000;
 slope0 = .07;
 LL = -sum(LLv) + aa*(paramsA(2)-slope0)^2 + aa*(paramsB(2)-slope0)^2; % total log-likelihood
-toc
+
 %% debugging
 %{
 % sliding window on each response

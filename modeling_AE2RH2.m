@@ -69,35 +69,79 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             sigg_inv = @(yy) -log(1./yy - 1); % inverse sigmoidal transformation [-1,1] -> [-inf,inf]
             paramsA(3) = sigg_inv(paramsA(3));
             paramsB(3) = sigg_inv(paramsB(3));
+           
+            % lower/upper bounds for fitting (with BADS)
+            % params: [mu_A sigma_A AE_A mu_B sigma_B AE_B init_AE];
+            LB = [0 0 0 0 0 -9 -9];
+            UB = [.75 100 9 10 10 9 -.04];
+            PLB = [.2 .02 .5 .2 .02 0 -2];
+            PUB = [.7 .5 9 .7 .5 9 -.5];
             
-            % fit two-process model
+            % -----fit two-process model-----
             habit_lik_constr = @(params) habit_lik(recodedX,recodedY,params(1:3),params(4:6),params(7)); % constrained function
             % find optimal parameters
             paramsInit = [paramsA(1:3) paramsB(1:3) sigg_inv(paramsA(4))];
-            [paramsOpt LLopt_2process(c,subject)] = fminsearch(habit_lik_constr,paramsInit);
-            paramsAOpt = paramsOpt(1:3);
-            paramsBOpt = paramsOpt(4:6);
+            paramsInit = max(paramsInit,LB);
+            paramsInit = min(paramsInit,UB);
+            
+            %[paramsOpt LLopt_2process(c,subject)] = fminsearch(habit_lik_constr,paramsInit);
+            [paramsOpt{c,subject} LLopt_2process(c,subject)] = bads(habit_lik_constr,paramsInit,LB,UB,PLB,PUB);
+            [xx Lv2{c,subject}] = habit_lik_constr(paramsOpt{c,subject});
+            
+            paramsAOpt = paramsOpt{c,subject}(1:3);
+            paramsBOpt = paramsOpt{c,subject}(4:6);
             paramsBOpt(3) = sigg(paramsBOpt(3));
-            paramsAOpt(3) = sigg(paramsA(3));
+            paramsAOpt(3) = sigg(paramsAOpt(3));
             % plot model predictions
             xplot=[.001:.001:1.2];
-            presponse_2 = getResponseProbs(xplot,paramsAOpt,paramsBOpt,sigg(paramsOpt(7)));
+            presponse_2 = getResponseProbs(xplot,paramsAOpt,paramsBOpt,sigg(paramsOpt{c,subject}(7)));
             
-            % fit one-process model
-            habit_lik_contsr = @(params) habit_lik_1process(recodedX,recodedY,params(1:3),params(4:6),params(7)); % constrained function
+            % ------fit one-process model------
+            habit_lik_constr1 = @(params) habit_lik_1process(recodedX,recodedY,params(1:3),params(4:6),params(7)); % constrained function
             % find optimal parameters
             paramsInit = [paramsA(1:3) paramsB(1:3) sigg_inv(paramsA(4))];
-            [paramsOpt LLopt_1process(c,subject)] = fminsearch(habit_lik_constr,paramsInit);
-            paramsAOpt = paramsOpt(1:3);
-            paramsBOpt = paramsOpt(4:6);
+            paramsInit = max(paramsInit,LB);
+            paramsInit = min(paramsInit,UB);
+            
+            %[paramsOpt1 LLopt_1process(c,subject)] = fminsearch(habit_lik_constr,paramsInit);
+            [paramsOpt1{c,subject} LLopt_1process(c,subject)] = bads(habit_lik_constr1,paramsInit,LB,UB,PLB,PUB);
+            [xx Lv1{c,subject}] = habit_lik_constr1(paramsOpt1{c,subject});
+            
+            paramsAOpt = paramsOpt1{c,subject}(1:3);
+            paramsBOpt = paramsOpt1{c,subject}(4:6);
             paramsBOpt(3) = sigg(paramsBOpt(3));
-            paramsAOpt(3) = sigg(paramsA(3));
+            paramsAOpt(3) = sigg(paramsAOpt(3));
             % plot model predictions
             xplot=[.001:.001:1.2];
-            presponse_1 = getResponseProbs_1process(xplot,paramsAOpt,paramsBOpt,sigg(paramsOpt(7)));
+            presponse_1 = getResponseProbs_1process(xplot,paramsAOpt,paramsBOpt,sigg(paramsOpt1{c,subject}(7)));
             
+            % -----fit flexi-habit model-----
+            % add constraints for extra parameter
+            LB(8) = 0;% = [0 0 0 0 0 -9 -9 0];
+            UB(8) = 1;% = [10 100 9 10 10 9 -.04 1];
+            PLB(8) = 0;% = [.2 .02 .5 .2 .02 0 -2 0];
+            PUB(8) = 1;% = [.7 .5 9 .7 .5 9 -.5 1];
+
+            habit_lik_constr_rho = @(params) habit_lik_rho(recodedX,recodedY,params(1:3),params(4:6),params(7),params(8)); % constrained function
+            % find optimal parameters
+            paramsInit = [paramsA(1:3) paramsB(1:3) sigg_inv(paramsA(4)) 0.5];
+            paramsInit = max(paramsInit,LB);
+            paramsInit = min(paramsInit,UB);
             
-            %plotting raw data...
+            %[paramsOpt LLopt_2process(c,subject)] = fminsearch(habit_lik_constr,paramsInit);
+            [paramsOpt_rho{c,subject} LLopt_rho(c,subject)] = bads(habit_lik_constr_rho,paramsInit,LB,UB,PLB,PUB);
+            [xx Lv2{c,subject}] = habit_lik_constr_rho(paramsOpt_rho{c,subject});
+            
+            paramsAOpt = paramsOpt_rho{c,subject}(1:3);
+            paramsBOpt = paramsOpt_rho{c,subject}(4:6);
+            paramsBOpt(3) = sigg(paramsBOpt(3));
+            paramsAOpt(3) = sigg(paramsAOpt(3));
+            % plot model predictions
+            xplot=[.001:.001:1.2];
+            presponse_rho = getResponseProbs_rho(xplot,paramsAOpt,paramsBOpt,sigg(paramsOpt_rho{c,subject}(7)),paramsOpt_rho{c,subject}(8));
+
+            %-----plot data and fits------
+            % plotting raw data...
             figure(subject); subplot(2,2,c);  hold on;  axis([0 1200 0 1.05]);
             plot([1:1200],unchanged,'--c','linewidth',1);
             plot([1:1200],revised,'--b','linewidth',1);
@@ -108,10 +152,55 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             
             plot([1:1200],presponse_2(1,:),'b','linewidth',2)
             plot([1:1200],presponse_2(2,:),'r','linewidth',2)
-            %plot([1:1200],presponse(4,:),'r:','linewidth',2)
+            plot([1:1200],presponse_2(4,:),'r-.','linewidth',2)
             plot([1:1200],presponse_1(1,:),'b:','linewidth',2)
-            plot([1:1200],presponse_1(2,:),'r','linewidth',2)
+            plot([1:1200],presponse_1(2,:),'r:','linewidth',2)
+
+            plot([1:1200],presponse_rho(1,:),'g:','linewidth',2)
+            plot([1:1200],presponse_rho(2,:),'m:','linewidth',2) 
 
         end
     end
 end
+
+%% compare likelihoods
+figure(100); clf; hold on
+subplot(1,3,1); hold on
+plot(log(LLopt_1process(1,:))-log(LLopt_2process(1,:)))
+axis([0 25 -.15 .15])
+
+subplot(1,3,2); hold on
+plot(log(LLopt_1process(2,:))-log(LLopt_2process(2,:)))
+axis([0 25 -.15 .15])
+
+subplot(1,3,3); hold on
+plot(log(LLopt_1process(3,:))-log(LLopt_2process(3,:)))
+axis([0 25 -.15 .15])
+%Lv_1proc = 
+
+for c=1:3
+    for subject=1:24
+        if(~isempty(Lv1{c,subject}))
+            BIC1(c,subject) = 2*4 + 2*LLopt_1process(c,subject);
+            BIC2(c,subject) = 2*7 + 2*LLopt_2process(c,subject);
+        else
+            BIC1(c,subject) = NaN;
+            BIC2(c,subject) = NaN;
+        end
+    end
+end
+
+figure(101); clf;
+for c=1:3
+    subplot(1,3,c); hold on
+    plot(BIC1(c,:)-BIC2(c,:),'o')
+    plot([0 25],[0 0],'k')
+    axis([0 25 -20 60])
+end
+dBIC = BIC1-BIC2;
+
+figure(102); clf; hold on
+plot(nanmean(dBIC'),'o')
+plot([1 1; 2 2; 3 3]',[nanmean(dBIC')+seNaN(dBIC');nanmean(dBIC')-seNaN(dBIC')],'b-')
+plot([0 4],[0 0],'k')
+xlim([.5 3.5])
