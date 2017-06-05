@@ -14,8 +14,8 @@ presponse = getResponseProbs(RT,params,model);
 
 RR = zeros(size(presponse));
 RR(1,response==1)=1;
-RR(2,response==2)=1;
-RR(3,response==3)=1;
+RR(2,response==2)=2;
+RR(2,response==3)
 
 Lv = sum(RR.*presponse);
 

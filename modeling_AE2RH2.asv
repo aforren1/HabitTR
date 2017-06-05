@@ -177,14 +177,11 @@ end
 figure(101); clf;
 for c=1:3
     subplot(1,3,c); hold on
-    title(cond_str{c})
     plot(AIC(c,:,2)-AIC(c,:,1),'o')
 
     plot([0 25],[0 0],'k')
     axis([0 25 -20 60])
-    ylabel('\Delta BIC')
-    xlabel('Subject #')
-    
+    ylabe
 end
 dAIC12 = AIC(:,:,2)-AIC(:,:,1);
 
@@ -193,5 +190,3 @@ plot(nanmean(dAIC12'),'o')
 plot([1 1; 2 2; 3 3]',[nanmean(dAIC12')+seNaN(dAIC12');nanmean(dAIC12')-seNaN(dAIC12')],'b-')
 plot([0 4],[0 0],'k')
 xlim([.5 3.5])
-ylabel('Average \Delta BIC')
-xlabel('condition')
