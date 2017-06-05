@@ -1,6 +1,6 @@
 close all; clear all;
-
-makepdf = 1; % make a pdf of data if 1
+cond_str = {'minimal','4day','4week'};
+makepdf = 0; % make a pdf of data if 1
 
 load tmp;
 clear data
@@ -169,8 +169,6 @@ xlabel('condition')
 
 %% plot data and fits
 close all;
-
-cond_str = {'minimal','4day','4week'};
 
 cols(:,:,1) = [ 0 210 255; 255 210 0; 0 0 0; 210 0 255]/256;
 cols(:,:,2) = [ 0 155 255; 255 100 0; 0 0 0; 155 0 255]/256;
