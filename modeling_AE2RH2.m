@@ -122,15 +122,20 @@ end
 for c=1:3
     for subject=1:24
         if(~isempty(model(1).Lv{subject,c}))
-            AIC(c,subject,1) = 2*7 + 2*model(1).LLopt(c,subject);
-            AIC(c,subject,2) = 2*4 + 2*model(2).LLopt(c,subject);
-            AIC(c,subject,3) = 2*8 + 2*model(2).LLopt(c,subject);
+            nParams = [7,4,8];
+            for m=1:3
+                model(m).LLactual(c,subject) = -sum(log(model(m).Lv{subject,c})); % compute actual (unpenalized) log-likelihood
+                AIC(c,subject,m) = 2*nParams(m) + 2*model(m).LLactual(c,subject);
+            end
+            %AIC(c,subject,2) = 2*4 - 2*sum(model(2).LLv{c,subject};
+            %AIC(c,subject,3) = 2*8 - 2*sum(model(3).LLv{c,subject};
         else
             AIC(c,subject,1) = NaN;
             AIC(c,subject,2) = NaN;
             AIC(c,subject,3) = NaN;
             for m=1:3
                 model(m).LLopt(c,subject)=NaN;
+                model(m).LLactual(c,subject)=NaN;
             end
         end
     end
@@ -140,7 +145,7 @@ end
 figure(100); clf; hold on
 for c=1:3
     subplot(1,3,c); hold on
-    plot(model(2).LLopt(c,:)-model(1).LLopt(c,:),'o')
+    plot(model(2).LLactual(c,:)-model(1).LLactual(c,:),'.','markersize',20)
     axis([0 25 -10 40])
 end
 
@@ -149,7 +154,7 @@ figure(101); clf;
 for c=1:3
     subplot(1,3,c); hold on
     title(cond_str{c})
-    plot(AIC(c,:,2)-AIC(c,:,1),'o')
+    plot(AIC(c,:,2)-AIC(c,:,1),'.','markersize',20)
     
     plot([0 25],[0 0],'k')
     axis([0 25 -20 60])
@@ -160,7 +165,7 @@ end
 dAIC12 = AIC(:,:,2)-AIC(:,:,1);
 
 figure(102); clf; hold on
-plot(nanmean(dAIC12'),'o')
+plot(nanmean(dAIC12'),'.','markersize',20)
 plot([1 1; 2 2; 3 3]',[nanmean(dAIC12')+seNaN(dAIC12');nanmean(dAIC12')-seNaN(dAIC12')],'b-')
 plot([0 4],[0 0],'k')
 xlim([.5 3.5])
@@ -172,6 +177,13 @@ cols(:,:,1) = [ 0 210 255; 255 210 0; 0 0 0; 210 0 255]/256;
 cols(:,:,2) = [ 0 155 255; 255 100 0; 0 0 0; 155 0 255]/256;
 cols(:,:,3) = [0 100 255; 255 0 0; 0 0 0; 100 0 255]/256;
 
+for f=1:24
+    figure(f); clf; hold on
+    subplot(3,4,1);
+    plot(0,0,'w.')    
+    subplot(3,4,12);
+    plot(0,0,'w.')
+end
 
 for c = 1:3 % 1=minimal, 2=4day, 3=4week
     if c < 2
@@ -186,6 +198,7 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             for m=1:3
                 subplot(3,4,m+4*(c-1));  hold on;  axis([0 1200 0 1.05]);
                 title([cond_str{c},' condition; ',model(m).name,' model'],'fontsize',8);
+                plot(0,0,'w.')
                 plot([1:1200],data(subject,c).sliding_window(4,:),'color',cols(4,:,c),'linewidth',.5);
                 plot([1:1200],data(subject,c).sliding_window(1,:),'color',cols(1,:,c),'linewidth',.5);
                 plot([1:1200],data(subject,c).sliding_window(2,:),'color',cols(2,:,c),'linewidth',.5);
