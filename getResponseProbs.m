@@ -11,6 +11,8 @@ PhiB = normcdf(RT,paramsB(1),paramsB(2));
 qA = paramsA(3);
 qB = paramsB(3);
 
+alpha = zeros(5,4);
+
 switch(model)
     % set up parameters:
     %     p(r) = alpha(.,1)*(1-PhiA)*(1-PhiB) + alpha(.,2)*PhiA*(1-PhiB) +

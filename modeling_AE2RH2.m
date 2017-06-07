@@ -68,17 +68,17 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             % lower/upper bounds for fitting (with BADS)
             % params: [mu_A sigma_A AE_A mu_B sigma_B AE_B init_AE rho]; -
             %       NB - rho = probability of habit in flex-habit model
-            LB_AE = .001; UB_AE = .999;
-            LB = [0 0 LB_AE 0 0 LB_AE LB_AE LB_AE];
-            UB = [.75 100 UB_AE 10 10 UB_AE .499 UB_AE];
-            PLB = [.2 .02 LB_AE .2 .02 LB_AE .1 LB_AE];
-            PUB = [.7 .5 UB_AE .7 .5 UB_AE .4 UB_AE];
+            LB_AE = .0001; UB_AE = .9999;
+            LB = [0 .01 .5 0 0 .5 LB_AE LB_AE];
+            UB = [.75 100 UB_AE 10 100 UB_AE .499 UB_AE];
+            PLB = [.2 .02 LB_AE .2 .02 .5 .1 LB_AE];
+            PUB = [.7 .5 .5 .7 .5 UB_AE .4 UB_AE];
             
             %paramsInit = [paramsA(1:3) paramsB(1:3) paramsA(4) .5];
             %paramsInit = max(paramsInit,LB);
             %paramsInit = min(paramsInit,UB);
             
-            paramsInit = [.8 .05 .95 .6 .05 .95 .25 .95];
+            paramsInit = [.4 .05 .95 .5 .05 .95 .25 .95];
             
             model(1).name = 'habit';
             model(2).name = 'no-habit';
@@ -89,13 +89,13 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             data(subject,c).response = recodedY;
             data(subject,c).sliding_window(1,:) = revised;
             data(subject,c).sliding_window(2,:) = habit;
+            data(subject,c).sliding_window(3,:) = (1-revised-habit)/2; % probability of "other" response
             data(subject,c).sliding_window(4,:) = unchanged;
             
             data(subject,c).pfit_unchanged = p1;
             
             % set up and fit each model
             for m=1:3
-                %model(i).InitParams
                 model(m).like_fun = @(params) habit_lik(data(subject,c).RT,data(subject,c).response,params,model(m).name);
                 
                 %[paramsOpt LLopt_2process(c,subject)] = fminsearch(habit_lik_constr,paramsInit);
@@ -124,16 +124,14 @@ for c=1:3
         if(~isempty(model(1).Lv{subject,c}))
             nParams = [7,4,8];
             for m=1:3
-                model(m).LLactual(c,subject) = -sum(log(model(m).Lv{subject,c})); % compute actual (unpenalized) log-likelihood
-                AIC(c,subject,m) = 2*nParams(m) + 2*model(m).LLactual(c,subject);
+                model(m).LLactual(c,subject) = sum(log(model(m).Lv{subject,c})); % compute actual (unpenalized) log-likelihood
+                model(m).AIC(c,subject) = 2*nParams(m) - 2*model(m).LLactual(c,subject);
             end
             %AIC(c,subject,2) = 2*4 - 2*sum(model(2).LLv{c,subject};
             %AIC(c,subject,3) = 2*8 - 2*sum(model(3).LLv{c,subject};
         else
-            AIC(c,subject,1) = NaN;
-            AIC(c,subject,2) = NaN;
-            AIC(c,subject,3) = NaN;
             for m=1:3
+                model(m).AIC(c,subject,1) = NaN;
                 model(m).LLopt(c,subject)=NaN;
                 model(m).LLactual(c,subject)=NaN;
             end
@@ -154,15 +152,15 @@ figure(101); clf;
 for c=1:3
     subplot(1,3,c); hold on
     title(cond_str{c})
-    plot(AIC(c,:,2)-AIC(c,:,1),'.','markersize',20)
+    plot(model(2).AIC(c,:)-model(1).AIC(c,:),'.','markersize',20)
     
     plot([0 25],[0 0],'k')
-    axis([0 25 -20 60])
+    axis([0 25 -20 70])
     ylabel('\Delta AIC')
     xlabel('Subject #')
     
 end
-dAIC12 = AIC(:,:,2)-AIC(:,:,1);
+dAIC12 = model(2).AIC-model(1).AIC;
 
 figure(102); clf; hold on
 plot(nanmean(dAIC12'),'.','markersize',20)
@@ -202,33 +200,32 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
                 plot([1:1200],data(subject,c).sliding_window(4,:),'color',cols(4,:,c),'linewidth',.5);
                 plot([1:1200],data(subject,c).sliding_window(1,:),'color',cols(1,:,c),'linewidth',.5);
                 plot([1:1200],data(subject,c).sliding_window(2,:),'color',cols(2,:,c),'linewidth',.5);
-                
+                plot([1:1200],data(subject,c).sliding_window(3,:),'m','linewidth',.5);
                 %plotting model fit data...
                 plot([1:1200],data(subject,c).pfit_unchanged,'color',cols(4,:,c),'linewidth',2);
                 
                 plot([1:1200],model(m).presponse(1,:,c,subject),'color',cols(1,:,c),'linewidth',2)
                 plot([1:1200],model(m).presponse(2,:,c,subject),'color',cols(2,:,c),'linewidth',2)
+                %plot([1:1200],model(m).presponse(3,:,c,subject),'m','linewidth',2)
                 if(m~=2)
                     plot([1:1200],model(m).presponse(4,:,c,subject),':','color',cols(4,:,c),'linewidth',2)
                 end
                 
-                text(650,.5,['AIC = ',num2str(AIC(c,subject,m))],'fontsize',8);
+                text(650,.5,['AIC = ',num2str(model(m).AIC(c,subject))],'fontsize',8);
                 
 
             end
             subplot(3,4,4*(c-1)+4); hold on
-            plot(AIC(c,:,2)-AIC(c,:,1),'bo')
-            plot(subject,AIC(c,subject,2)-AIC(c,subject,1),'b.','markersize',20)
+            plot(model(2).AIC(c,:)-model(1).AIC(c,:),'bo')
+            plot(subject,model(2).AIC(c,subject)-model(1).AIC(c,subject),'b.','markersize',20)
             
             plot([0 25],[0 0],'k')
             axis([0 25 -20 70])
             title('\Delta AIC','fontsize',8)
         end
-        set(fhandle, 'Position', [100, 100, 1000, 600]);
+        set(fhandle, 'Position', [600, 100, 1000, 600]);
         set(fhandle, 'Color','w')
     end
-    
-
 end
 
 %% generate pdfs
