@@ -39,11 +39,11 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             
             paramsU = fit_speed_accuracy_AE2(unchangedX,unchangedY);
             p1 = paramsU(4)+(paramsU(3)-paramsU(4))*normcdf([(1:1200)/1000],paramsU(1),paramsU(2));
-            p.(['condition' num2str(c)]).unchanged = [p.(['condition' num2str(c)]).unchanged; paramsU];
+            p.(['condition' num2str(c)]).unchanged(subject,:) = paramsU;
             
             params = fit_speed_accuracy_AE2(revisedX,revisedY);
             p2 = params(4)+(params(3)-params(4))*normcdf([(1:1200)/1000],params(1),params(2));
-            p.(['condition' num2str(c)]).revised = [p.(['condition' num2str(c)]).revised; params];
+            p.(['condition' num2str(c)]).revised(subject,:) = params;
             
             %%ADRIAN: here's the place to try out the new fitting.
             %you can use inputs recodedX and recodedY
@@ -80,6 +80,10 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             
             paramsInit = [.4 .05 .95 .5 .05 .95 .25 .95];
             
+            % Inequality constraint to ensure that muA < muB
+            A = [0 0 1 0 0 -1 0 0];
+            B = 0;
+            
             model(1).name = 'habit';
             model(2).name = 'no-habit';
             model(3).name = 'flex-habit';
@@ -100,7 +104,7 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
                 
                 %[paramsOpt LLopt_2process(c,subject)] = fminsearch(habit_lik_constr,paramsInit);
                 %[model(i).paramsOpt(subject,:,c), model(i).LLopt(c,subject)] = bads(model(i).like_fun,paramsInit,LB,UB,PLB,PUB);
-                [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = fmincon(model(m).like_fun,paramsInit,[],[],[],[],LB,UB);
+                [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = fmincon(model(m).like_fun,paramsInit,A,B,[],[],LB,UB);
                 
                 % get full likelihood vector
                 [~, model(m).Lv{subject,c}] = model(m).like_fun(model(m).paramsOpt(subject,:,c));
@@ -197,16 +201,16 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
                 subplot(3,4,m+4*(c-1));  hold on;  axis([0 1200 0 1.05]);
                 title([cond_str{c},' condition; ',model(m).name,' model'],'fontsize',8);
                 plot(0,0,'w.')
-                plot([1:1200],data(subject,c).sliding_window(4,:),'color',cols(4,:,c),'linewidth',.5);
+                plot([1:1200],data(subject,c).sliding_window(3,:),'color',cols(4,:,c),'linewidth',.5);
                 plot([1:1200],data(subject,c).sliding_window(1,:),'color',cols(1,:,c),'linewidth',.5);
                 plot([1:1200],data(subject,c).sliding_window(2,:),'color',cols(2,:,c),'linewidth',.5);
-                plot([1:1200],data(subject,c).sliding_window(3,:),'m','linewidth',.5);
+                %plot([1:1200],data(subject,c).sliding_window(4,:),'m','linewidth',.5);
                 %plotting model fit data...
-                plot([1:1200],data(subject,c).pfit_unchanged,'color',cols(4,:,c),'linewidth',2);
+                %plot([1:1200],data(subject,c).pfit_unchanged,'color',cols(4,:,c),'linewidth',2);
                 
                 plot([1:1200],model(m).presponse(1,:,c,subject),'color',cols(1,:,c),'linewidth',2)
                 plot([1:1200],model(m).presponse(2,:,c,subject),'color',cols(2,:,c),'linewidth',2)
-                %plot([1:1200],model(m).presponse(3,:,c,subject),'m','linewidth',2)
+                plot([1:1200],model(m).presponse(3,:,c,subject),'color',cols(4,:,c),'linewidth',2)
                 if(m~=2)
                     plot([1:1200],model(m).presponse(4,:,c,subject),':','color',cols(4,:,c),'linewidth',2)
                 end

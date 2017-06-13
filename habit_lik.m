@@ -1,4 +1,4 @@
-function[LL Lv] = habit_lik(RT,response,params,model)
+function [LL Lv] = habit_lik(RT,response,params,model)
 % computes likelihood of observed responses under automaticity model
 % inputs:
 %   RT - N x 1 reaction time for each trial

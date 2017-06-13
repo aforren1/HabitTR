@@ -94,17 +94,17 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
         if ismember(subject,exclude) == 0,  %only run on subjects that completed the study
             % plotting raw data...
             fhandle = figure(subject);
-            mi = [1 4 5];
+            mi = [2 4 5];
             for i=1:length(mi)
                 subplot(3,4,i+4*(c-1));  hold on;  axis([0 1200 0 1.05]);
                 title([cond_str{c},' condition; ',model(mi(i)).name,' model'],'fontsize',8);
                 plot(0,0,'w.')
-                plot([1:1200],data(subject,c).sliding_window(4,:),'color',cols(4,:,c),'linewidth',.5);
+                plot([1:1200],data(subject,c).sliding_window(3,:),'color',cols(4,:,c),'linewidth',.5);
                 plot([1:1200],data(subject,c).sliding_window(1,:),'color',cols(1,:,c),'linewidth',.5);
                 plot([1:1200],data(subject,c).sliding_window(2,:),'color',cols(2,:,c),'linewidth',.5);
                 
                 %plotting model fit data...
-                plot([1:1200],data(subject,c).pfit_unchanged,'color',cols(4,:,c),'linewidth',2);
+                %plot([1:1200],data(subject,c).pfit_unchanged,'color',cols(4,:,c),'linewidth',2);
                 
                 plot([1:1200],model(mi(i)).presponse(1,:,c,subject),'color',cols(1,:,c),'linewidth',2)
                 plot([1:1200],model(mi(i)).presponse(2,:,c,subject),'color',cols(2,:,c),'linewidth',2)
