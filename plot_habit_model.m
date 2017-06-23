@@ -43,18 +43,19 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
                 plot([1:1200],model(m).presponse(1,:,c,subject),'color',cols(1,:,c),'linewidth',2)
                 plot([1:1200],model(m).presponse(2,:,c,subject),'color',cols(2,:,c),'linewidth',2)
                 plot([1:1200],model(m).presponse(3,:,c,subject),'color',cols(4,:,c),'linewidth',2)
-                if(m~=2)
+                if(m~=1)
                     plot([1:1200],model(m).presponse(4,:,c,subject),':','color',cols(4,:,c),'linewidth',2)
                 end
                 text(650,.5,['AIC = ',num2str(model(m).AIC(c,subject))],'fontsize',8);
             end
             
             subplot(3,4,4*(c-1)+4); cla; hold on
-            plot(model(2).AIC(c,:)-model(1).AIC(c,:),'bo')
-            plot(subject,model(2).AIC(c,subject)-model(1).AIC(c,subject),'b.','markersize',20)
+            plot(model(1).AIC(c,:)-model(2).AIC(c,:),'bo')
+            plot(subject,model(1).AIC(c,subject)-model(2).AIC(c,subject),'b.','markersize',20)
             
             plot([0 25],[0 0],'k')
-            axis([0 25 -20 70])
+            xlim([0 25])
+            ylim([-70 70])
             title('\Delta AIC','fontsize',8)
         end
 

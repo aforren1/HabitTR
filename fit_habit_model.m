@@ -9,7 +9,7 @@ load HabitData;
 
 % set up bounds for model
 LB_AE = .0001; UB_AE = .9999;
-LB = [0 .01 .5 0 0 .5 LB_AE LB_AE];
+LB = [0 .01 .5 0 .01 .5 LB_AE LB_AE];
 UB = [.75 100 UB_AE 10 100 UB_AE .499 UB_AE];
 PLB = [.2 .02 LB_AE .2 .02 .5 .1 LB_AE];
 PUB = [.7 .5 .5 .7 .5 UB_AE .4 UB_AE];
@@ -18,13 +18,17 @@ PUB = [.7 .5 .5 .7 .5 UB_AE .4 UB_AE];
 paramsInit = [.4 .05 .99 .5 .05 .95 .25 .95];
 
 % Inequality constraint to ensure that muA < muB
-A = [0 0 1 0 0 -1 0 0];
+A = [1 0 0 -1 0 0 0 0];
 B = 0;
 
 for m=1:3
     % RT-values for plotting model prediction
     model(m).RTplot = [.001:.001:1.2];
 end
+
+model(1).name = 'no-habit';
+model(2).name = 'habit'
+model(3).name = 'flex-habit';
 
 for c = 1:3 % 1=minimal, 2=4day, 3=4week
     for subject = 1:size(data,1)
@@ -36,8 +40,13 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
                 
                 %[paramsOpt LLopt_2process(c,subject)] = fminsearch(habit_lik_constr,paramsInit);
                 %[model(i).paramsOpt(subject,:,c), model(i).LLopt(c,subject)] = bads(model(i).like_fun,paramsInit,LB,UB,PLB,PUB);
-                [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = fmincon(like_fun,paramsInit,A,B,[],[],LB,UB);
-                
+                if(m>=2)
+                    Aeq = [0 0 1 0 0 0 0 0];
+                    Beq = .99;
+                    [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = fmincon(like_fun,paramsInit,A,B,Aeq,Beq,LB,UB);
+                else
+                    [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = fmincon(like_fun,paramsInit,A,B,[],[],LB,UB);
+                end
                 % get full likelihood vector
                 [~, model(m).Lv{subject,c}] = like_fun(model(m).paramsOpt(subject,:,c));
             end
@@ -55,7 +64,9 @@ end
 for c=1:3
     for subject=1:24
         if(~isempty(model(1).Lv{subject,c}))
-            nParams = [7,4,8];
+            nParams = [4,6,7]; % 4 params for no-habit model(muB,sigmaB,q_init,q_B)
+                               % + 2 for habit (muA,sigmaA)
+                               % + 1 for flex-habit (rho)
             for m=1:3
                 model(m).LLactual(c,subject) = sum(log(model(m).Lv{subject,c})); % compute actual (unpenalized) log-likelihood
                 model(m).AIC(c,subject) = 2*nParams(m) - 2*model(m).LLactual(c,subject);
