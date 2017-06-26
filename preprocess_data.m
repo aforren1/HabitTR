@@ -1,5 +1,5 @@
 % load in raw data and pre-process in format suitable for fitting the model
-close all; clear all
+clear all
 cond_str = {'minimal','4day','4week'};
 
 load tmp;
@@ -67,6 +67,15 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             data(subject,c).sliding_window(3,:) = (1-revised-habit)/2; % probability of "other" response
             data(subject,c).sliding_window(4,:) = unchanged;
             data(subject,c).condition_name = cond_str{c};
+        
+        % weed out bad subjects
+        % need to have accuracy >=70% for RT>800ms
+        data(subject,c).asympt_err = mean(data(subject,c).response(data(subject,c).RT>.8)==1);
+        if(data(subject,c).asympt_err<.7)
+            % for now, delete RT as this is current proxy for excluded
+            % subjects
+            data(subject,c).RT = [];
+        end
         end
     end
 end
