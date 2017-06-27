@@ -71,7 +71,7 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
 end
 
 %% generate pdfs
-makepdf=1;
+%makepdf=1;
 if(makepdf)
     for subject=1:24
         figure(subject)

@@ -49,7 +49,7 @@ plot(t,model(2).presponse(2,:,2,ex_subj(2)),'color',cols(2,:,2),'linewidth',2)
 %plot(t,model(2).presponse(2,:,2,ex_subj(2)),':','color',cols(2,:,2),'linewidth',2)
 axis([0 1.2 0 1])
 
-%% AIC plots
+% AIC plots
 dAIC = model(1).AIC - model(2).AIC;
 subplot(2,3,3); cla; hold on
 
@@ -72,4 +72,28 @@ plot([0 25],[0 0],'k')
 xlim([0 25]) 
 ylim([-40 40])
 
-export_fig ModelFits -eps
+%export_fig ModelFits_part2 -eps
+
+%% part II of this figure - illustrating the model
+fhandle = figure(101); clf; hold on
+set(fhandle, 'Position', [600, 100, 250, 300]); % set size and loction on screen
+set(fhandle, 'Color','w') % set background color to white
+
+paramsDemo = [.4 .06 .99 .5 .09 .9 .25 1];
+xplot = [0:.01:1.2];
+
+subplot(2,1,1); hold on
+plot(xplot,normpdf(xplot,paramsDemo(1),paramsDemo(2)),'r','linewidth',2)
+plot(xplot,normpdf(xplot,paramsDemo(4),paramsDemo(5)),'b','linewidth',2)
+xlim([0 1.2])
+ylim([0 20])
+
+subplot(2,1,2); hold on
+presponse = getResponseProbs(xplot,paramsDemo,'habit');
+plot(xplot,presponse(2,:),'r','linewidth',2)
+plot(xplot,presponse(1,:),'b','linewidth',2)
+
+%export_fig ModelFits_part1 -eps
+%% figure 7: skill versus habit
+figure(102); clf; hold on
+
