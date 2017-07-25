@@ -3,7 +3,8 @@
 
 %pull data and apply model
 
-close all; clear all
+%close all; 
+clear all
 cond_str = {'minimal','4day','4week'};
 
 % load tmp;

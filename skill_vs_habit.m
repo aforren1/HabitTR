@@ -4,32 +4,30 @@
 clear all
 load HabitModelFits
 
-figure(1); clf; hold
+figure(101); clf; hold
+trainingRT_all{2} = [data(:,2).trainingRT];
+dRT{2} = mean(trainingRT_all{2}(2:6,:))-mean(trainingRT_all{2}(36:40,:))
+dAIC{2} = model(1).AIC(2,:)-model(2).AIC(2,:);
 
+trainingRT_all{3} = [data(:,3).trainingRT];
+dRT{3} = 1000*(mean(trainingRT_all{3}(2:6,:))-mean(trainingRT_all{3}(171:175,:)))
+dAIC{3} = model(1).AIC(3,1:15)-model(2).AIC(3,1:15);
 
-%{
-skill = p.condition2.unchanged(:,1);
-ibad = find(skill==0)
-skill(ibad)=NaN;
+%dRT = trainingRT_all(2,:)-mean(trainingRT_all(36:40));
+plot(dRT{2},dAIC{2},'.','markersize',12)
+plot(dRT{3},dAIC{3},'r.','markersize',12)
+%plot(dRT1,dAIC,'r.','markersize',12)
+ylabel('\Delta AIC')
+xlabel('\Delta RT')
 
-habit = dAIC12(2,:)'>0;
+igood = ~isnan(dRT{2}) & ~isnan(dAIC{2});
+[rho, p] = corr(dRT{2}(igood)',dAIC{2}(igood)')
 
-i_habitual = find(habit==1);
-skill_habit = skill(i_habitual);
+%optional - labels for individual subjects
+for s=1:24
+   %text(dRT{2}(s)+2,dAIC{2}(s),num2str(s))
+end
 
-i_nothabitual = find(habit==0);
-skill_nohabit = skill(i_nothabitual);
-
-figure(41); clf; hold on
-plot(habit,skill,'o')
-
-plot([0 1],[nanmean(skill_nohabit) nanmean(skill_habit)],'linewidth',2)
-axis([-.5 1.5 0 .7])
-text(-.25, .6, 'non-habitual participants','fontsize',8)
-text(.75, .6, 'habitual participants','fontsize',10)
-ylabel('skill level (ms)')
-
-%export_fig habit_vs_skill.png
-[t_skill p_skill] = ttest(skill_habit,skill_nohabit,1,'independent')
-%}
-%% 
+for s=1:15
+   %text(dRT{3}(s)+2,dAIC{3}(s),num2str(s))
+end

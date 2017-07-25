@@ -83,13 +83,20 @@ end
 % load Free RT data
 load data
 
+% condition 2
 % hack to insert NaNs for missing subjects
 ss = [1:5 7:15 17:24];
 for s=1:22
     data(ss(s),2).trainingRT = d.e1.group.training.RT(s,:)';
 end
 data(6,2).trainingRT = NaN*ones(1,40)';
-data(17,2).trainingRT = NaN*ones(1,40)';
+data(16,2).trainingRT = NaN*ones(1,40)';
 
+% condition 3
+ss = [1:7 9:15];
+for s=1:14
+    data(ss(s),3).trainingRT = d.e2.group.training.RT(s,:)';
+end
+data(8,3).trainingRT = NaN*ones(size(data(1,3).trainingRT));
 
 save HabitData data
