@@ -84,7 +84,7 @@ end
 load data
 
 % hack to insert NaNs for missing subjects
-ss = [1:5 7:16 18:24];
+ss = [1:5 7:15 17:24];
 for s=1:22
     data(ss(s),2).trainingRT = d.e1.group.training.RT(s,:)';
 end

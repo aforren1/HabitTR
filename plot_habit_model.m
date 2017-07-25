@@ -19,7 +19,7 @@ for f=1:24
     % pre-plot blank data in corner subplots to avoid cropping when exporting to pdf
     subplot(3,5,1);
     plot(0,0,'w.')    
-    subplot(3,4,12);
+    subplot(3,5,12);
     plot(0,0,'w.')
 end
 

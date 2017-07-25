@@ -27,28 +27,31 @@ for subject = 1:maxSub
        end
     end
 end
-    figure(1); clf; hold on
+    figure(101); clf; hold on
     bar(output(:,1)-output(:,2));
     ylabel('RT Improvement (negative indicates worse performance after training)');
     
-    figure(2); clf; hold on
+    figure(102); clf; hold on
     tmp = (output(:,1)-output(:,2));
     imissing = find(tmp==0);
     tmp(tmp==0) = [];
-    plot(tmp,d.e1.group.training.RT(:,11)-d.e1.group.training.RT(:,40),'.','markersize',10)
-    
+    plot(tmp,d.e1.group.training.RT(:,1)-d.e1.group.training.RT(:,40),'.','markersize',10)
+    xlabel('skill improvement for unchanged symbols')
+    ylabel('\Delta RT during training')
+
     %%
     load HabitModelFits
     
-skill_delta = d.e1.group.training.RT(:,11)-d.e1.group.training.RT(:,40);
+skill_delta = d.e1.group.training.RT(:,1)-d.e1.group.training.RT(:,40);
 
 %imissing = find(isnan(tmp));
 
-figure(3); clf; hold on
+figure(103); clf; hold on
 dAIC = model(1).AIC(2,:)-model(2).AIC(2,:);
 dAIC(imissing) = [];
 plot(skill_delta, dAIC,'.','markersize',12);
-
+xlabel('\Delta RT during training')
+ylabel('Habit strength (\Delta AIC)')
     
     
     
