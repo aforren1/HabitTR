@@ -1,7 +1,13 @@
 % skill vs habit comparison
-% condition 2:
+% condition 2
+
+clear all
+load HabitModelFits
+
+figure(1); clf; hold
 
 
+%{
 skill = p.condition2.unchanged(:,1);
 ibad = find(skill==0)
 skill(ibad)=NaN;
@@ -25,3 +31,5 @@ ylabel('skill level (ms)')
 
 %export_fig habit_vs_skill.png
 [t_skill p_skill] = ttest(skill_habit,skill_nohabit,1,'independent')
+%}
+%% 

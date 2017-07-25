@@ -1,8 +1,8 @@
 % tinker with model. examine effect of varying the habit parameter rho
 Np = 6;
-rho = linspace(0,1,Np);
-ae = linspace(.95,.25,Np);
-c1 = linspace(.3,1,Np)';
+rho = linspace(0,1,Np); % habit-ness parameter
+ae = linspace(.95,.25,Np); % asymptotic error parameter
+c1 = linspace(.3,1,Np)'; % colors
 c2 = linspace(1,.3,Np)';
 o = ones(size(c2));
 col = [c1 c2 .5*o];
@@ -54,10 +54,13 @@ axis([0 1.2 0 1])
 
 
 %% examine whether there is such a thing as an intermediate habit
-rho = squeeze(model(5).paramsOpt(:,8,:));
+rho = squeeze(model(3).paramsOpt(:,8,:));
 rho(rho==0)=NaN;
 figure(32); clf; hold on
 hist(rho)
 
 [subj_noHabit c_noHabit] = find(rho<0.1 | rho>.9);
 [subj_Habit c_Habit] = find(rho>0.1 & rho<.9);
+
+%% model predicts a relationship between guess offset, correct onset, and habit size
+

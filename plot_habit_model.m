@@ -17,7 +17,7 @@ for f=1:24
     set(fhandle, 'Color','w') % set background color to white
     
     % pre-plot blank data in corner subplots to avoid cropping when exporting to pdf
-    subplot(3,4,1);
+    subplot(3,5,1);
     plot(0,0,'w.')    
     subplot(3,4,12);
     plot(0,0,'w.')
@@ -57,14 +57,19 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             title('\Delta AIC habit/no-habit','fontsize',8)
             
             
-            subplot(3,5,5*(c-1)+5); cla; hold on
-            plot(model(3).AIC(c,:)-model(2).AIC(c,:),'bo')
-            plot(subject,model(3).AIC(c,subject)-model(2).AIC(c,subject),'b.','markersize',20)
-            plot([0 25],[0 0],'k')
-            xlim([0 25])
-            ylim([-15 15])
-            title('\Delta AIC habit/flex-habit','fontsize',8)
-            
+%             subplot(3,5,5*(c-1)+5); cla; hold on
+%             plot(model(3).AIC(c,:)-model(2).AIC(c,:),'bo')
+%             plot(subject,model(3).AIC(c,subject)-model(2).AIC(c,subject),'b.','markersize',20)
+%             plot([0 25],[0 0],'k')
+%             xlim([0 25])
+%             ylim([-15 15])
+%             title('\Delta AIC habit/flex-habit','fontsize',8)
+            if(c==2) % plot learning curve
+                subplot(3,5,5*(c-1)+5); cla; hold on
+                plot(data(subject,c).trainingRT,'b','linewidth',2)
+                plot([data(:,c).trainingRT],'color',.7*[1 1 1])
+                ylim([350 750])
+            end
 
         end
     end

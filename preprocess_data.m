@@ -79,4 +79,17 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
         end
     end
 end
+%%
+% load Free RT data
+load data
+
+% hack to insert NaNs for missing subjects
+ss = [1:5 7:16 18:24];
+for s=1:22
+    data(ss(s),2).trainingRT = d.e1.group.training.RT(s,:)';
+end
+data(6,2).trainingRT = NaN*ones(1,40)';
+data(17,2).trainingRT = NaN*ones(1,40)';
+
+
 save HabitData data

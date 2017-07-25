@@ -1,4 +1,4 @@
-function pOpt = fit_speed_accuracy_AE(RT,hit)
+function [pOpt, yplt] = fit_speed_accuracy_AE(RT,hit)
 % generates parametric fit to speed-accuracy trade-off data
 % Input: RT - reaction time data
 %        hit - outcome; 1=succes, 0=failure
@@ -27,6 +27,11 @@ LL(pOpt);
 % transform constrained variables (lower and upper asymptote)
 pOpt(3) = sigg(pOpt(3));
 pOpt(4) = sigg(pOpt(4));
+
+if(nargout>1)
+    xplt = [0:.01:1.2];
+    yplt = pOpt(4)+normcdf(xplt,pOpt(1),pOpt(2))*(pOpt(3)-pOpt(4));
+end
 %% sliding window to visualize data
 %{
 xplot=[0:0.001:1];
@@ -37,7 +42,8 @@ for i=1:length(xplot)
 end
 % plot fit
 %
-subplot(2,1,2); hold on
+figure(11); clf; hold on
+%subplot(2,1,2); hold on
 ycdf = normcdf(xplot,pOpt(1),pOpt(2));
 plot(xplot,pOpt(4) + ycdf*(pOpt(3)-pOpt(4)),'b','linewidth',2);
 plot(xplot,phit_sliding)
