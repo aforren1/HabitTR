@@ -35,7 +35,7 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
                 plot([1:1200],data(subject,c).sliding_window(3,:),'color',cols(4,:,c),'linewidth',.5);
                 plot([1:1200],data(subject,c).sliding_window(1,:),'color',cols(1,:,c),'linewidth',.5);
                 plot([1:1200],data(subject,c).sliding_window(2,:),'color',cols(2,:,c),'linewidth',.5);
-                %plot([1:1200],data(subject,c).sliding_window(4,:),'m','linewidth',.5);
+                plot([1:1200],data(subject,c).sliding_window(4,:),'m','linewidth',.5);
                 %plotting model fit data...
                 %plot([1:1200],data(subject,c).pfit_unchanged,'color',cols(4,:,c),'linewidth',2);
                 

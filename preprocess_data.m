@@ -55,19 +55,27 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             recodedY(i0) = 3;
             
             % get rid of any trials that had unchanged x - fitting to
-            % changed symbols only
+            % changed symbols
             revised_trials = ismember(recodedX,revisedX);
-            recodedX = recodedX(revised_trials)';
-            recodedY = recodedY(revised_trials)';
+            recodedXr = recodedX(revised_trials)';
+            recodedYr = recodedY(revised_trials)';
             
-            data(subject,c).RT = recodedX;
-            data(subject,c).response = recodedY;
+            % unchanged symbols
+            non_revised_trials = ismember(recodedX,unchangedX);
+            recodedXnr = recodedX(non_revised_trials)';
+            recodedYnr = recodedY(non_revised_trials)';
+            
+            data(subject,c).RT = recodedXr;
+            data(subject,c).response = recodedYr;
             data(subject,c).sliding_window(1,:) = revised;
             data(subject,c).sliding_window(2,:) = habit;
             data(subject,c).sliding_window(3,:) = (1-revised-habit)/2; % probability of "other" response
             data(subject,c).sliding_window(4,:) = unchanged;
             data(subject,c).condition_name = cond_str{c};
         
+            data(subject,c).response_unchanged = recodedYnr;
+            data(subject,c).RT_unchanged = recodedXnr;
+            
         % weed out bad subjects
         % need to have accuracy >=70% for RT>800ms
         data(subject,c).asympt_err = mean(data(subject,c).response(data(subject,c).RT>.8)==1);

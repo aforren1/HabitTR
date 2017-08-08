@@ -75,7 +75,7 @@ ylim([-40 40])
 %export_fig ModelFits_part2 -eps
 
 %% part II of this figure - illustrating the model
-fhandle = figure(101); clf; hold on
+fhandle = figure(102); clf; hold on
 set(fhandle, 'Position', [600, 100, 250, 300]); % set size and loction on screen
 set(fhandle, 'Color','w') % set background color to white
 
@@ -94,6 +94,4 @@ plot(xplot,presponse(2,:),'r','linewidth',2)
 plot(xplot,presponse(1,:),'b','linewidth',2)
 
 %export_fig ModelFits_part1 -eps
-%% figure 7: skill versus habit
-figure(102); clf; hold on
 

@@ -25,9 +25,9 @@ igood = ~isnan(dRT{2}) & ~isnan(dAIC{2});
 
 %optional - labels for individual subjects
 for s=1:24
-   %text(dRT{2}(s)+2,dAIC{2}(s),num2str(s))
+   text(dRT{2}(s)+2,dAIC{2}(s),num2str(s))
 end
 
 for s=1:15
-   %text(dRT{3}(s)+2,dAIC{3}(s),num2str(s))
+   text(dRT{3}(s)+2,dAIC{3}(s),num2str(s))
 end
