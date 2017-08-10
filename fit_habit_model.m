@@ -48,7 +48,8 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
                     [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = fmincon(like_fun,paramsInit,A,B,[],[],LB,UB);
                 end
                 % get full likelihood vector
-                [~, model(m).Lv{subject,c}] = like_fun(model(m).paramsOpt(subject,:,c));
+                [~, model(m).Lv{subject,c}, model(m).LL] = like_fun(model(m).paramsOpt(subject,:,c));
+                
             end
             
             % generate continuous model predictions

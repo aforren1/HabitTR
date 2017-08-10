@@ -1,4 +1,4 @@
-function [LL Lv] = habit_lik(RT,response,params,model)
+function [nLL Lv LL] = habit_lik(RT,response,params,model)
 % computes likelihood of observed responses under automaticity model
 % inputs:
 %   RT - N x 1 reaction time for each trial
@@ -44,7 +44,9 @@ Lv = alpha(response,1).*(1-PhiA).*(1-PhiB) + alpha(response,2).*PhiA.*(1-PhiB) +
 LLv = log(Lv); % log-likelihood vector
 aa =1000;
 slope0 = .07;
-LL = -sum(LLv) + aa*(params(2)-slope0)^2 + aa*(params(5)-slope0)^2; % total log-likelihood
+nLL = -sum(LLv) + aa*(params(2)-slope0)^2 + aa*(params(5)-slope0)^2; % total neg-log-likelihood
+
+LL= sum(LLv);
 %% debugging
 %{
 % sliding window on each response

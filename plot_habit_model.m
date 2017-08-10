@@ -57,23 +57,48 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
             title('\Delta AIC habit/no-habit','fontsize',8)
             
             
-%             subplot(3,5,5*(c-1)+5); cla; hold on
-%             plot(model(3).AIC(c,:)-model(2).AIC(c,:),'bo')
-%             plot(subject,model(3).AIC(c,subject)-model(2).AIC(c,subject),'b.','markersize',20)
-%             plot([0 25],[0 0],'k')
-%             xlim([0 25])
-%             ylim([-15 15])
-%             title('\Delta AIC habit/flex-habit','fontsize',8)
-            if(c==2) % plot learning curve
-                subplot(3,5,5*(c-1)+5); cla; hold on
-                plot(data(subject,c).trainingRT,'b','linewidth',2)
-                plot([data(:,c).trainingRT],'color',.7*[1 1 1])
-                ylim([350 750])
-            end
+            subplot(3,5,5*(c-1)+5); cla; hold on
+            plot(model(3).AIC(c,:)-model(2).AIC(c,:),'bo')
+            plot(subject,model(3).AIC(c,subject)-model(2).AIC(c,subject),'b.','markersize',20)
+            plot([0 25],[0 0],'k')
+            xlim([0 25])
+            ylim([-15 15])
+            title('\Delta AIC habit/flex-habit','fontsize',8)
+
+%             if(c==2) % plot learning curve
+%                 subplot(3,5,5*(c-1)+5); cla; hold on
+%                 plot(data(subject,c).trainingRT,'b','linewidth',2)
+%                 plot([data(:,c).trainingRT],'color',.7*[1 1 1])
+%                 ylim([350 750])
+%             end
 
         end
     end
 end
+
+%% make AIC figure for habit model
+figure(101); clf; hold on
+for i=1:3
+    
+    plot(i+.2*(-.5+[1:24]/24),model(1).AIC(i,:)-model(2).AIC(i,:),'b.','markersize',10);
+    dAICav = nanmean(model(1).AIC(i,:)-model(2).AIC(i,:));
+    dAICse = nanstd(model(1).AIC(i,:)'-model(2).AIC(i,:)');
+    plot(i,dAICav,'k.','markersize',12);
+    plot([i i],dAICav+[-dAICse/2 dAICse/2],'k','linewidth',2)
+end
+plot([0 4],[0 0],'k')
+
+%% make AIC figure for continuous model
+figure(102); clf; hold on
+for i=1:3
+    
+    plot(i+.2*(-.5+[1:24]/24),model(3).AIC(i,:)-model(2).AIC(i,:),'b.','markersize',10);
+    dAICav = nanmean(model(3).AIC(i,:)-model(2).AIC(i,:));
+    dAICse = nanstd(model(3).AIC(i,:)'-model(2).AIC(i,:)');
+    plot(i,dAICav,'k.','markersize',12);
+    plot([i i],dAICav+[-dAICse/2 dAICse/2],'k','linewidth',2)
+end
+plot([0 4],[0 0],'k')
 
 %% generate pdfs
 %makepdf=1;
