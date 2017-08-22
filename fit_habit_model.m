@@ -4,6 +4,8 @@
 %
 clear all
 
+optimizer='bads'; % or 'fmincon'
+
 % load data
 load HabitData;
 
@@ -12,8 +14,12 @@ LB_AE = .0001; UB_AE = .9999;
 LB = [0 .01 .5 0 .01 .5 LB_AE LB_AE];
 UB = [.75 100 UB_AE 10 100 UB_AE .499 UB_AE];
 PLB = [.2 .02 LB_AE .2 .02 .5 .1 LB_AE];
-PUB = [.7 .5 .5 .7 .5 UB_AE .4 UB_AE];
+PUB = [.7 .1 .9999 .7 .1 UB_AE .4 UB_AE];
 
+% lock in upper asymptote for A
+LB(3) = .99; UB(3) = .999;
+PLB(3) = .99; PUB(3) = .999;
+                            
 % initial parameters
 paramsInit = [.4 .05 .99 .5 .05 .95 .25 .95];
 
@@ -43,13 +49,28 @@ for c = 1:3 % 1=minimal, 2=4day, 3=4week
                 if(m>=2)
                     Aeq = [0 0 1 0 0 0 0 0];
                     Beq = .99;
-                    [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = fmincon(like_fun,paramsInit,A,B,Aeq,Beq,LB,UB);
+                    %[model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = fmincon(like_fun,paramsInit,A,B,Aeq,Beq,LB,UB);
+                    
+                    
+                    switch(optimizer)
+                        case 'bads'
+                            [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = bads(like_fun,paramsInit,LB,UB,PLB,PUB);
+                            
+                            
+                        case 'fmincon'
+                            [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = fmincon(like_fun,paramsInit,A,B,Aeq,Beq,LB,UB);
+                   
+                    end
                 else
-                    [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = fmincon(like_fun,paramsInit,A,B,[],[],LB,UB);
+                    switch (optimizer)
+                        case 'bads'
+                            [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = bads(like_fun,paramsInit,LB,UB,PLB,PUB);
+                        case 'fmincon'  
+                            [model(m).paramsOpt(subject,:,c), model(m).LLopt(c,subject)] = fmincon(like_fun,paramsInit,A,B,[],[],LB,UB);
+                    end
                 end
                 % get full likelihood vector
-                [~, model(m).Lv{subject,c}, model(m).LL] = like_fun(model(m).paramsOpt(subject,:,c));
-                
+                [~, model(m).Lv{subject,c}, model(m).LL] = like_fun(model(m).paramsOpt(subject,:,c));    
             end
             
             % generate continuous model predictions
@@ -128,4 +149,10 @@ ylabel('Average \Delta AIC')
 xlabel('condition')
 %}
 %%
-save HabitModelFits model data 
+% change saved filename depending on which optimization procedure was used
+switch (optimizer)
+    case 'bads'
+        save HabitModelFits_bads model data 
+    case 'fmincon'
+        save HabitModelFits model data
+end
