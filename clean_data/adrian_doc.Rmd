@@ -1,0 +1,136 @@
+---
+title: "Doc for Adrian"
+author: "Alex Forrence"
+date: "September 1, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, dev='svg', warning=FALSE,message=FALSE)
+```
+
+## Import data
+
+Note: Used sliding window of 100ms (50ms on each side)
+
+```{r data}
+library(ggplot2)
+source('clean.r')
+source('misc.r') # sliding window function
+
+# import data
+data_20day <- clean_20day()
+# remove bad trials
+data_20day <- data_20day[PrepTime > 0 & ResponseButton < 5 & PrepTime < 5]
+# subset data to relevant bit
+data_20day_tr <- data_20day[Session >= 24 & !IsToCriterion & !IsFreeResp]
+
+# Session 24 is the last timed response before the switch,
+# 25 is the criterion (removed), and 26 is timed response to remap
+# any greater than 26 need to be determined
+
+# calculate sliding window per subject, 
+# and population-level per session
+data_20day_tr[, SlideIndividual := slider(PrepTime, Correct, window_size = 0.1), 
+              by = c('Session', 'WillRemap', 'Subject')]
+
+data_20day_tr[, SlidePop := slider(PrepTime, Correct, window_size = 0.1),
+              by = c('Session', 'WillRemap')]
+
+```
+
+We can look at the frequency of `IsRemapped` to try and take a guess at what happened when...
+```{r}
+tmp <- data_20day[Session > 24]
+table(paste0('Remapped: ', tmp$IsRemapped, ', Free Resp: ', tmp$IsFreeResp), tmp$Session, tmp$Subject)
+```
+
+My guesses:
+101 - 3 days of remapping training (27-29), no TR
+102 - 3 days of remapping training (27-29), remapped TR on 30, 1 day training on original (31), original TR on 32
+103 - 1 day of original training (27), original TR on 28
+104 - Like 102
+105 - 1 day of original training, no TR
+106 - like 103
+107 - like 103
+108 - like 103
+110 - like 102
+111 - like 103
+112 - like 103
+113 - 2 days of remapping training (27-28), no TR
+114 - Nothing past session 26
+115 - 1 day remapping training, no TR (and seems like there were more remapped than non-remapped trials? Will look again)
+
+```{r plotfn}
+plotfn_pop <- function(data, title = '') {
+  ggplot(data, aes(x = PrepTime, 
+                   y = SlidePop, 
+                   colour = factor(WillRemap))) + 
+  geom_hline(linetype = 'longdash', yintercept = 0.25) +
+  geom_line(size = 1) + 
+  xlim(c(0, 1)) +
+  labs(x = 'Reaction Time (s)', y = 'Proportion Correct', title = title)
+}
+
+plotfn_ind <- function(data, title = '') {
+  ggplot(data, aes(x = PrepTime, 
+                   y = SlideIndividual, 
+                   colour = factor(WillRemap))) + 
+  geom_hline(linetype = 'longdash', yintercept = 0.25) +
+  facet_wrap(~Subject, ncol = 3) + 
+  geom_histogram(aes(fill = factor(WillRemap), 
+                     y = ..count../(max(..count..) * 2)), 
+                 binwidth = 0.01, 
+                 alpha = 0.4, 
+                 position = 'identity') +
+  geom_line(size = 1) + 
+  xlim(c(0, 1)) +
+  labs(x = 'Reaction Time (s)', y = 'Proportion Correct', title = title)
+}
+```
+
+## 1: SAT after 4 weeks of learning
+
+```{r, fig.width=12, fig.height=10}
+plotfn_pop(data_20day_tr[Session == 24], 'Remapped vs non-remapped, pre-remapping, after 4 weeks')
+
+plotfn_ind(data_20day_tr[Session == 24], 'As above, but per individual')
+```
+
+## 2: SAT at start of week 5 (map switched)
+```{r, fig.width=12, fig.height=10}
+plotfn_pop(data_20day_tr[Session == 26], 'Remapped vs non-remapped, post-remapping')
+
+plotfn_ind(data_20day_tr[Session == 26], 'As above, per individual')
+```
+
+## 3: SAT at end of week 5 (practice on remapped)
+
+```{r subdata}
+extended_training <- data_20day_tr[Subject %in% c(102, 104, 110)]
+immediate_back <- data_20day_tr[Subject %in% c(103, 106, 107, 108, 111, 112)]
+```
+
+### Remapped SAT after extended (3 days) training on new map
+```{r}
+plotfn_pop(extended_training[Session == 30])
+
+plotfn_ind(extended_training[Session == 30])
+```
+
+## 4: SAT after going *back* to the original map
+
+### Extended (3 day) training
+
+```{r}
+plotfn_pop(extended_training[Session == 32])
+
+plotfn_ind(extended_training[Session == 32])
+```
+
+### Immediate switch back (1 day training on original map)
+```{r}
+plotfn_pop(immediate_back[Session == 28])
+
+plotfn_ind(immediate_back[Session == 28])
+```
