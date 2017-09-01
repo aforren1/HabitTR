@@ -112,9 +112,11 @@ immediate_back <- data_20day_tr[Subject %in% c(103, 106, 107, 108, 111, 112)]
 ```
 
 ### Remapped SAT after extended (3 days) training on new map
-```{r}
+```{r, fig.width=12, fig.height=10}
 plotfn_pop(extended_training[Session == 30])
+```
 
+```{r, fig.width=12, fig.height=5}
 plotfn_ind(extended_training[Session == 30])
 ```
 
@@ -122,14 +124,16 @@ plotfn_ind(extended_training[Session == 30])
 
 ### Extended (3 day) training
 
-```{r}
+```{r, fig.width=12, fig.height=10}
 plotfn_pop(extended_training[Session == 32])
+```
 
+```{r, fig.width=12, fig.height=5}
 plotfn_ind(extended_training[Session == 32])
 ```
 
 ### Immediate switch back (1 day training on original map)
-```{r}
+```{r, fig.width=12, fig.height=10}
 plotfn_pop(immediate_back[Session == 28])
 
 plotfn_ind(immediate_back[Session == 28])
