@@ -1,0 +1,146 @@
+---
+title: "Extended Training, part deux"
+author: "Alex Forrence"
+date: "September 5, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, dev='svg', warning=FALSE,message=FALSE, fig.width=12,
+                      fig.height=8)
+```
+
+```{r, include=FALSE}
+library(ggplot2)
+library(ggthemes)
+theme_set(theme_bw())
+source('clean.r')
+source('misc.r') # sliding window function
+
+# import data
+data_20day <- clean_20day()
+# remove bad trials
+data_20day <- data_20day[PrepTime > 0 & ResponseButton < 5 & PrepTime < 5]
+# subset data to relevant bit
+data_20day_tr <- data_20day[Session >= 24 & !IsToCriterion & !IsFreeResp]
+
+data_20day_tr[, 'WentOld' := ResponseButton == OldButton]
+data_20day_tr[, 'WentNew' := ResponseButton == NewButton]
+data_20day_tr[, Choice := ifelse(!WillRemap, 'Control', 
+                                 ifelse(WentNew, 'Went to new',
+                                 ifelse(WentOld, 'Went to old', 'Went to other'))),
+              by = c('Subject', 'Session')]
+
+data_20day_tr[Choice == 'Control', 'Individual, Control (Correct)' := slider(PrepTime, Correct),
+              by = c('Subject', 'Session')]
+data_20day_tr[Choice == 'Control', 'Population, Control (Correct)' := slider(PrepTime, Correct),
+              by = c('Session')]
+
+data_20day_tr[Choice != 'Control', 'Individual, Went New' := slider(PrepTime, Choice == 'Went to new'),
+              by = c('Subject', 'Session')]
+data_20day_tr[Choice != 'Control', 'Population, Went New' := slider(PrepTime, Choice == 'Went to new'),
+              by = c('Session')]
+
+data_20day_tr[Choice != 'Control', 'Individual, Went Old' := slider(PrepTime, Choice == 'Went to old'),
+              by = c('Subject', 'Session')]
+data_20day_tr[Choice != 'Control', 'Population, Went Old' := slider(PrepTime, Choice == 'Went to old'),
+              by = c('Session')]
+
+
+data_20day_tr[Choice != 'Control', 'Individual, Went Other' := slider(PrepTime, Choice == 'Went to other'),
+              by = c('Subject', 'Session')]
+data_20day_tr[Choice != 'Control', 'Population, Went Other' := slider(PrepTime, Choice == 'Went to other'),
+              by = c('Session')]
+
+pop_level <- melt(data_20day_tr, 
+            id.vars = c('Subject', 'Session', 'Trial', 'PrepTime', 'Choice'),
+            measure.vars = c('Population, Control (Correct)', 'Population, Went New', 
+                             'Population, Went Old', 'Population, Went Other'))
+
+ind_level <- melt(data_20day_tr, 
+            id.vars = c('Subject', 'Session', 'Trial', 'PrepTime', 'Choice'),
+                        measure.vars = c('Individual, Control (Correct)', 'Individual, Went New', 
+                             'Individual, Went Old', 'Individual, Went Other'))
+
+```
+
+```{r plotfuns}
+
+plotfun_pop <- function(data, title = '') {
+  ggplot(data[!is.na(value)], aes(x = PrepTime,
+                   y = value,
+                   colour = variable)) +
+    geom_hline(linetype = 'longdash', yintercept = 0.25) +
+    geom_line(size = 1) + 
+    labs(x = 'Reaction Time (s)', y = 'Proportion Correct (Control) or Choice (All Others)', title = title,
+         subtitle = 'Population-level') +
+    scale_colour_few() +
+    xlim(c(0, 1))
+}
+
+plotfun_ind <- function(data, title = '') {
+  ggplot(data[!is.na(value)], aes(x = PrepTime,
+                   y = value,
+                   colour = variable)) +
+    geom_hline(linetype = 'longdash', yintercept = 0.25) +
+    geom_line(size = 1) + 
+    labs(x = 'Reaction Time (s)', y = 'Proportion Correct', title = title,
+         subtitle = 'Individual-level') +
+    facet_wrap(~Subject, ncol = 3) +
+    scale_colour_few()+
+    xlim(c(0, 1))
+}
+```
+
+```{r preswitch}
+plotfun_pop(pop_level[Session==24],
+            title = 'Speed-Accuracy Tradeoffs Following Four Weeks of Practice')
+plotfun_ind(ind_level[Session==24],
+            title = 'Speed-Accuracy Tradeoffs Following Four Weeks of Practice')
+```
+
+```{r postswitch}
+plotfun_pop(pop_level[Session==26],
+            title = 'Speed-Accuracy Tradeoffs Immediately Following Switch')
+plotfun_ind(ind_level[Session==26],
+            title = 'Speed-Accuracy Tradeoffs Immediately Following Switch')
+
+```
+
+```{r subdata}
+immediate_back <- data_20day_tr[Subject %in% c(103, 106, 107, 108, 111, 112)]
+```
+
+```{r extratrain1}
+plotfun_pop(pop_level[Session==30 & Subject %in% c(102, 104, 110)],
+            title = 'Speed-Accuracy Tradeoffs After Three Days of Practice on New Map')
+```
+
+```{r extratrain2, fig.height=5, fig.width=14}
+plotfun_ind(ind_level[Session==30 & Subject %in% c(102, 104, 110)],
+            title = 'Speed-Accuracy Tradeoffs After Three Days of Practice on New Map')
+```
+
+```{r backtoold1}
+plotfun_pop(pop_level[Session==32 & Subject %in% c(102, 104, 110) ],
+            title = 'Speed-Accuracy Tradeoffs After Three Days & Switch Back To Original Map')
+```
+
+```{r backtoold2, fig.height=5, fig.width=14}
+plotfun_ind(ind_level[Session==32 & Subject %in% c(102, 104, 110)],
+            title = 'Speed-Accuracy Tradeoffs After Three Days & Switch Back To Original Map')
+```
+
+
+```{r backtoold3}
+plotfun_pop(pop_level[Session==28 & Subject %in% c(103, 106, 107, 108, 111, 112)],
+            title = 'Speed-Accuracy Tradeoffs After Immediate Switch Back To Original Map')
+```
+
+```{r backtoold4, fig.height=8, fig.width=14}
+plotfun_ind(ind_level[Session==28 & Subject %in% c(103, 106, 107, 108, 111, 112)],
+            title = 'Speed-Accuracy Tradeoffs After Immediate Switch Back To Original Map')
+```
+
+
+
