@@ -1,0 +1,120 @@
+---
+title: "Bayesian Inference via Stan"
+author: "Alexander Forrence"
+date: "July 20, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, error = FALSE, message = FALSE)
+```
+
+## Intro
+
+Stan is a probabilistic programming language, with hooks into R, python, MATLAB, ...
+
+
+
+
+```{r premodel, echo=FALSE}
+library(rstan)
+library(bayesplot)
+library(data.table)
+
+color_scheme_set('teal')
+
+slider <- function(x, y, window_size = 0.1) {
+  out <- rep(NA, length(y))
+  upper <- x + (window_size/2)
+  lower <- x - (window_size/2)
+  for (nn in seq(1, length(y))) {
+    out[nn] <- mean(y[x <= upper[nn] & x >= lower[nn]], na.rm = TRUE)
+  }
+  out
+}
+
+individual_dat <- R.matlab::readMat('HabitData.mat')
+three_week <- individual_dat[[1]][,,3]
+
+subject_counter <- 1
+data_list <- list()
+
+for (ii in 1:24) {
+  if (!is.null(three_week[,ii][[1]])) {
+    data_list[[subject_counter]] <- data.frame(rt = three_week[,ii]$RT[1,],
+                                               response = three_week[,ii]$response[1,],
+                                               id = subject_counter)
+    subject_counter <- subject_counter + 1
+  }
+}
+
+three_week <- do.call(rbind, data_list)
+three_week <- three_week[three_week$rt > 0,]
+
+three_week <- as.data.table(three_week)
+
+```
+
+```{r explore, echo=FALSE}
+three_week[, new_map := slider(rt, response == 1), by = 'id']
+three_week[, old_map := slider(rt, response == 2), by = 'id']
+three_week[, other_response := slider(rt, response == 3), by = 'id']
+
+three_melt <- melt(three_week, id.vars = c('rt', 'response', 'id'))
+
+ggplot(three_melt, aes(x = rt, y = value, colour = variable)) + 
+  geom_histogram(aes(x = rt, y = ..density../10, colour = NULL, fill = factor(response)), 
+                 position = 'identity', alpha = .5, bins = 40) +
+  geom_line() + 
+  facet_wrap(~id, ncol = 3) 
+
+```
+
+Model described below:
+
+$$\alpha = \begin{bmatrix}guess & habit \cdot \frac{1 - upper_a}{3} & upper_b & upper_b \\ 
+          guess & habit \cdot upper_a + (1 - habit) \cdot guess & \frac{1 - upper_b}{3} & \frac{1 - upper_a}{3} \\
+          2 \cdot (0.5 - guess) & 2 \cdot (habit \cdot \frac{1 - upper_a}{3} + (1 - habit) \cdot (0.5 - guess)) & 2 \cdot \frac{1 - upper_b}{3} & 2 \cdot \frac{1 - upper_b}{3}\end{bmatrix}\\$$
+
+$$\theta = \alpha \cdot \phi$$
+
+
+
+Other txt
+
+
+```{r analysis, eval=FALSE, include=FALSE}
+three_week <- three_week[id != 8]
+three_week[id > 7, id := id - 1] # realign subject numbers
+
+stan_data <- list(rt = three_week$rt,
+             y = three_week$response,
+             nsub = length(unique(three_week$id)),
+             subject = three_week$id,
+             N = nrow(three_week))
+mod <- stan_model('habit_model.stan')
+fit <- sampling(mod, data = stan_data, 
+                chains = 3,
+                cores = 3,
+                iter = 2000)
+```
+
+```{r analysis2, echo=FALSE}
+load('habit_fit.rda')
+habit_draws <- as.array(fit, pars = 'habit')
+mcmc_trace(habit_draws)
+mcmc_intervals(habit_draws)
+preds <- summary(fit, pars = 'probs_sim_continuous', probs = c(0.05, 0.5, 0.95))$summary
+
+pred_mean <- as.data.frame(t(matrix(preds[,1], nrow = 3, byrow = TRUE)))
+pred_low <- as.data.frame(t(matrix(preds[,4], nrow = 3, byrow = TRUE)))
+pred_high <- as.data.frame(t(matrix(preds[,6], nrow = 3, byrow = TRUE)))
+
+colnames(pred_mean) <- c('pred_new', 'pred_old', 'pred_other')
+colnames(pred_low) <- c('low_new', 'low_old', 'low_other')
+colnames(pred_high) <- c('hi_new', 'hi_old', 'hi_other')
+
+tmp <- cbind(three_week, pred_mean, pred_low, pred_high)
+```
+
+

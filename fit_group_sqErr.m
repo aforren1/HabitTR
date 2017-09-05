@@ -47,7 +47,7 @@ for c=1:3
     paramsA(3) = sigg_inv(paramsA(3));
     paramsB(3) = sigg_inv(paramsB(3));
     
-    habit_lik_constr = @(params) habit_lik(recodedX_all{c},recodedY_all{c},params(1:3),params(4:6),params(7)); % constrained function
+    habit_lik_constr = @(params) habit_lik(recodedX_all{c},recodedY_all{c},params(1:7), ); % constrained function
     % find optimal parameters
     paramsInit = [paramsA(1:3) paramsB(1:3) sigg_inv(paramsA(4))];
     paramsOpt(c,:) = fminsearch(habit_lik_constr,paramsInit);

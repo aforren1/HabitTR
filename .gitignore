@@ -9,3 +9,13 @@
 *.eps
 *.png
 *.svg
+
+*.rda
+*.rds
+.Rhistory
+.Rproj.user/
+.Rproj
+*.dll
+*.so
+*.o
+
